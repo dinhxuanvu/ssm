@@ -89,7 +89,7 @@ class Configuration(unittest.TestCase):
 
 class SimpleStorageHandleSanityCheck(BaseStorageHandleInit):
     """
-    Simple sanity ckecks for StorageHandle class and some of its methods.
+    Simple sanity checks for StorageHandle class and some of its methods.
     """
 
     def test_constructor(self):

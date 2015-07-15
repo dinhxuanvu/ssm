@@ -44,6 +44,7 @@ SSM_CRYPT_DEFAULT_VOL_PREFIX = config.get_variable('crypt', 'volume_name',
 DM_DEV_DIR = "/dev"
 MAX_DEVS = 999
 
+
 def get_cryptsetup_version():
     try:
         output = misc.run(['cryptsetup', '--version'], can_fail=True)[1]
@@ -53,6 +54,7 @@ def get_cryptsetup_version():
     return version
 
 CRYPTSETUP_VERSION = get_cryptsetup_version()
+
 
 class DmObject(template.Backend):
     def __init__(self, *args, **kwargs):
@@ -85,7 +87,6 @@ class DmCryptPool(DmObject, template.BackendPool):
                 'hide': True}
         self.data[self.default_pool_name] = pool
         '''
-
 
     def create(self, pool, size=None, name=None, devs=None,
                options=None):
@@ -244,7 +245,6 @@ class DmCryptDevice(DmObject, template.BackendDevice):
                 device['dev_free'] = '0'
                 device['dev_used'] = str(misc.get_device_size(devname))
                 self.data[devname] = device
-
 
     def remove(self, devices):
         misc.wipefs(devices, CRYPT_SIGNATURES)
