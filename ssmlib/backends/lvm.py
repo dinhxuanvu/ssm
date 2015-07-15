@@ -19,16 +19,19 @@ import re
 import os
 import stat
 import datetime
+from ssmlib import config
 from ssmlib import misc
 from ssmlib import problem
 from ssmlib.backends import template
 
 __all__ = ["PvsInfo", "VgsInfo", "LvsInfo"]
 
-try:
-    SSM_LVM_DEFAULT_POOL = os.environ['SSM_LVM_DEFAULT_POOL']
-except KeyError:
-    SSM_LVM_DEFAULT_POOL = "lvm_pool"
+SSM_LVM_DEFAULT_POOL = config.get_variable('lvm', 'default_pool',
+                                           'SSM_LVM_DEFAULT_POOL',
+                                           'lvm_pool')
+LVOL_PREFIX = config.get_variable('lvm', 'volume_name',
+                                  'LVOL_PREFIX',
+                                  'lvol')
 
 try:
     DM_DEV_DIR = os.environ['DM_DEV_DIR']
@@ -143,7 +146,7 @@ class VgsInfo(LvmInfo, template.BackendPool):
 
     def _generate_lvname(self, vg):
         for i in range(1, MAX_LVS):
-            name = "lvol{0:0>{align}}".format(i, align=len(str(MAX_LVS)))
+            name = "{0}{1:0>{align}}".format(LVOL_PREFIX, i, align=len(str(MAX_LVS)))
             path = "{0}/{1}/{2}".format(DM_DEV_DIR, vg, name)
             try:
                 if stat.S_ISBLK(os.stat(path).st_mode):

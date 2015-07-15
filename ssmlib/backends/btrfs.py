@@ -19,14 +19,14 @@ import re
 import os
 import datetime
 from ssmlib import misc
+from ssmlib import config
 from ssmlib.backends import template
 
 __all__ = ["BtrfsVolume", "BtrfsPool", "BtrfsDev"]
 
-try:
-    SSM_BTRFS_DEFAULT_POOL = os.environ['SSM_BTRFS_DEFAULT_POOL']
-except KeyError:
-    SSM_BTRFS_DEFAULT_POOL = "btrfs_pool"
+SSM_BTRFS_DEFAULT_POOL = config.get_variable('btrfs', 'default_pool',
+                                             'SSM_BTRFS_DEFAULT_POOL',
+                                             'btrfs_pool')
 
 
 def get_btrfs_version():

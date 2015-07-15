@@ -20,6 +20,7 @@ import os
 import sys
 import stat
 import argparse
+from ssmlib import config
 from ssmlib import misc
 from ssmlib import problem
 
@@ -71,15 +72,12 @@ except KeyError:
     DEFAULT_DEVICE_POOL = "device_pool"
 
 # Default back-end
-try:
-    SSM_DEFAULT_BACKEND = os.environ['SSM_DEFAULT_BACKEND']
-    if SSM_DEFAULT_BACKEND not in SUPPORTED_BACKENDS:
-        if PR.check(PR.BAD_ENV_VARIABLE,
-                    ['SSM_DEFAULT_BACKEND', SSM_DEFAULT_BACKEND]):
-            SSM_DEFAULT_BACKEND = 'lvm'
-except KeyError:
-    SSM_DEFAULT_BACKEND = 'lvm'
-
+SSM_DEFAULT_BACKEND = config.get_variable("general", "default_backend",
+                                          "SSM_DEFAULT_BACKEND","lvm")
+if SSM_DEFAULT_BACKEND not in SUPPORTED_BACKENDS:
+    if PR.check(PR.BAD_ENV_VARIABLE,
+                ['SSM_DEFAULT_BACKEND', SSM_DEFAULT_BACKEND]):
+        SSM_DEFAULT_BACKEND = 'lvm'
 
 # If this environment variable is set, ssm will only consider such devices,
 # pools and volumes which names start with this prefix. This is especially

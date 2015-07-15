@@ -18,6 +18,7 @@
 import re
 import os
 import stat
+from ssmlib import config
 from ssmlib import misc
 from ssmlib.backends import template
 
@@ -27,15 +28,12 @@ SUPPORTED_CRYPT = ['luks', 'plain']
 CRYPT_SIGNATURES = ['crypto_LUKS']
 CRYPT_DEFAULT_EXTENSION = "luks"
 
-try:
-    SSM_CRYPT_DEFAULT_POOL = os.environ['SSM_CRYPT_DEFAULT_POOL']
-except KeyError:
-    SSM_CRYPT_DEFAULT_POOL = "crypt_pool"
-
-try:
-    SSM_CRYPT_DEFAULT_VOL_PREFIX = os.environ['SSM_CRYPT_DEFAULT_VOL_PREFIX']
-except KeyError:
-    SSM_CRYPT_DEFAULT_VOL_PREFIX = "encrypted"
+SSM_CRYPT_DEFAULT_POOL = config.get_variable('crypt', 'default_pool',
+                                             'SSM_CRYPT_DEFAULT_POOL',
+                                             'crypt_pool')
+SSM_CRYPT_DEFAULT_VOL_PREFIX = config.get_variable('crypt', 'volume_name',
+                                                   'SSM_CRYPT_DEFAULT_VOL_PREFIX',
+                                                   'encrypted')
 
 # cryptsetup against my expectations does not take into account
 # DM_DEV_DIR so set it to /dev pernamently for now.

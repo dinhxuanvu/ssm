@@ -25,11 +25,67 @@ import time
 import doctest
 import unittest
 import argparse
+from ssmlib import config
 from ssmlib import main
 from ssmlib import misc
 from ssmlib import problem
 
 from tests.unittests.common import *
+
+
+class Configuration(unittest.TestCase):
+    def test_general_config(self):
+        self.assertEqual(config.get_variable('general', 'default_backend',
+                                             'SSM_DEFAULT_BACKEND','lvm'),
+                         'lvm', 'Missing default backend option')
+
+    def test_lvm_config(self):
+        self.assertEqual(config.get_variable('lvm', 'default_pool',
+                                             'SSM_LVM_DEFAULT_POOL','lvm_pool'),
+                         'lvm_pool', 'Missing lvm default pool option')
+        self.assertEqual(config.get_variable('lvm', 'volume_name',
+                                             'LVOL_PREFIX','lvol'),
+                         'lvol', 'Missing lvm volume name option')
+
+    def test_btrfs_config(self):
+        self.assertEqual(config.get_variable('btrfs', 'default_pool',
+                                             'SSM_BTRFS_DEFAULT_POOL','btrfs_pool'),
+                         'btrfs_pool', 'Missing btrfs default pool option')
+
+    def test_crypt_config(self):
+        self.assertEqual(config.get_variable('crypt', 'default_pool',
+                                             'SSM_CRYPT_DEFAULT_POOL','crypt_pool'),
+                         'crypt_pool', 'Missing crypt default pool option')
+        self.assertEqual(config.get_variable('crypt', 'volume_name',
+                                             'SSM_CRYPT_DEFAULT_VOL_PREFIX','encrypted'),
+                         'encrypted', 'Missing crypt volume name option')
+
+    def test_config_handle(self):
+        self.assertEqual(config.get_variable('general', 'default_backend',
+                                             'SSM_DEFAULT_BACKEND','nothing'),
+                         'lvm', 'General backend configuration fails')
+        self.assertEqual(config.get_variable('nothing', 'nothing',
+                                             'nothing','test'),
+                         'test', 'General backend default option fails')
+        self.assertEqual(config.get_variable('lvm', 'default_pool',
+                                             'SSM_LVM_DEFAULT_POOL','nothing'),
+                         'lvm_pool', 'LVM pool configuration fails')
+        self.assertEqual(config.get_variable('nothing', 'nothing',
+                                             'nothing','test'),
+                         'test', 'LVM pool default option fails')
+        self.assertEqual(config.get_variable('btrfs', 'default_pool',
+                                             'SSM_BTRFS_DEFAULT_POOL','nothing'),
+                         'btrfs_pool', 'BTRFS pool configuration fails')
+        self.assertEqual(config.get_variable('nothing', 'nothing',
+                                             'nothing','test'),
+                         'test', 'BTRFS pool default option fails')
+        self.assertEqual(config.get_variable('crypt', 'default_pool',
+                                             'SSM_CRYPT_DEFAULT_POOL','nothing'),
+                         'crypt_pool', 'CRYPT pool configuration fails')
+        self.assertEqual(config.get_variable('nothing', 'nothing',
+                                             'nothing','test'),
+                         'test', 'CRYPT pool default option fails')
+
 
 class SimpleStorageHandleSanityCheck(BaseStorageHandleInit):
     """
