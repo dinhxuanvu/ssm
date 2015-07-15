@@ -23,6 +23,7 @@ System Storage Manager
     src/commands/index
     src/backends/backends
     src/env_variables
+    src/configuration_file
     src/availability
     src/install
     src/requirements

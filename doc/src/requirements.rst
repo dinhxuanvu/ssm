@@ -21,6 +21,8 @@ Python modules
 * datetime
 * threading
 * subprocess
+* ConfigParser/configparser
+* encode
 
 System tools
 ------------

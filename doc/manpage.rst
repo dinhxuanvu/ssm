@@ -13,6 +13,7 @@ System Storage Manager's documentation
     src/backends/backends
     src/man_examples
     src/env_variables
+    src/configuration_file
     src/licence
     src/requirements
     src/availability

@@ -47,6 +47,7 @@ Backends
 .. include:: src/backends/crypt.rst
 
 .. include:: src/env_variables.rst
+.. include:: src/configuration_file.rst
 .. include:: src/examples.rst
 
 .. include:: src/install.rst

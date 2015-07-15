@@ -14,8 +14,16 @@ SSM_BTRFS_DEFAULT_POOL
     Name of the default btrfs pool to be used if the **-p** or **--pool**
     argument is omitted.
 
+SSM_CRYPT_DEFAULT_POOL
+    Name of the default crypt pool to be used if the **-p** or **--pool**
+    argument is omitted.
+
 SSM_PREFIX_FILTER
     When this is set, **ssm** will filter out all devices, volumes and pools
     whose name does not start with this prefix. It is used mainly in the **ssm**
     test suite to make sure that we do not scramble the local system
     configuration.
+
+SSM_CONFIG_PATH
+    The path where the configuration file exists. If the variable is not set,
+    the program will assume the file is located in **/etc/ssm.conf** directory.
