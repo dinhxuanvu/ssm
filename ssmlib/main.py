@@ -19,6 +19,7 @@ import re
 import os
 import sys
 import stat
+import atexit
 import argparse
 from ssmlib import config
 from ssmlib import misc
@@ -156,7 +157,11 @@ class FsInfo(object):
         fstype = self.fstype
         if re.match("ext[2|3|4]", self.fstype):
             fstype = "extN"
-        func = getattr(self, "{0}_{1}".format(fstype, func))
+        try:
+            func = getattr(self, "{0}_{1}".format(fstype, func))
+        except AttributeError:
+            msg = "{0} file system is not yet supported.".format(fstype)
+            raise problem.NotSupported(msg)
         return func(*args, **kwargs)
 
     def fsck(self):
@@ -221,14 +226,14 @@ class FsInfo(object):
         # offline.
         if self.mounted and (self.fstype == "ext2" or
            new_size < self.data['fs_size']):
-            raise Exception(
-                "{0} is mounted on {1}".format(self.device, self.mounted) +
+            raise problem.FsMounted(
+                "{0} is mounted on {1}.".format(self.device, self.mounted) +
                 " In this case, mounted file system can not be resized.")
         ret = self.fsck()
         if ret:
-            raise Exception("File system on {0} is not ".format(self.device) +
-                            "clean, I will not attempt to resize it. Please," +
-                            "fix the problem first.")
+            raise PR.error("File system on {0} is not ".format(self.device) +
+                           "clean, I will not attempt to resize it. Please," +
+                           "fix the problem first")
         return misc.run(command, stdout=True)[0]
 
     def xfs_get_info(self, dev):
@@ -273,10 +278,10 @@ class FsInfo(object):
         if new_size:
             command.insert(1, ['-D', new_size + 'K'])
         if not self.mounted:
-            raise Exception("Xfs file system on {0}".format(self.device) +
-                            " has to be mounted to perform an resize.")
+            raise PR.error("Xfs file system on {0}".format(self.device) +
+                           " has to be mounted to perform an resize")
         elif new_size and new_size < self.data['fs_size']:
-            raise Exception("Xfs file system can not shrink.")
+            raise PR.error("Xfs file system can not shrink")
         else:
             misc.run(command, stdout=True)
 
@@ -351,7 +356,7 @@ class DeviceInfo(object):
     def remove(self, device):
         PR.error("It is not clear what do you want " +
                  "to achieve by removing " +
-                 "{0}!".format(device))
+                 "{0}".format(device))
 
     def set_globals(self, options):
         self.options = options
@@ -782,7 +787,7 @@ class Snapshots(Storage):
             PR.warn(err)
             PR.warn("Can not get information about btrfs snapshots")
 
-        self.header = ['Snapshot', 'Origin', 'Pool', 'Volume size', 'Size',
+        self.header = ['Snapshot', 'Origin', 'Pool', 'Volume size', 'Used',
                        'Type', 'Mount point']
         self.attrs = ['dev_name', 'origin', 'pool_name', 'vol_size',
                       'snap_size', 'type', 'mount']
@@ -963,7 +968,7 @@ class StorageHandle(object):
                         args.device.append(dev)
                         changed = True
                     elif new_size is None:
-                        PR.error("Device \'{0}\' can not be used!".format(dev))
+                        PR.error("Device \'{0}\' can not be used".format(dev))
                     else:
                         devices.remove(dev)
                         continue
@@ -975,7 +980,7 @@ class StorageHandle(object):
                 # would be different than what user expected, so we should fail
                 # right away.
                 elif new_size is None:
-                    PR.error("Device \'{0}\' can not be used!".format(dev))
+                    PR.error("Device \'{0}\' can not be used".format(dev))
                 else:
                     devices.remove(dev)
                     continue
@@ -993,7 +998,10 @@ class StorageHandle(object):
                         continue
                 signature = misc.get_fs_type(dev)
                 if signature and \
-                   not PR.check(PR.EXISTING_FILESYSTEM, [signature, dev]):
+                   PR.check(PR.EXISTING_FILESYSTEM, [signature, dev]):
+                    misc.wipefs(dev, signature)
+                    args.device.append(dev)
+                elif signature:
                     devices.remove(dev)
                     continue
                 else:
@@ -1024,7 +1032,7 @@ class StorageHandle(object):
         args.pool = self.pool[args.volume['pool_name']]
         vol_size = float(args.volume['vol_size'])
 
-        if args.pool.type == 'btrfs':
+        if args.pool != None and args.pool.type == 'btrfs':
             msg = "Resizing btrfs volume is not supported"
             raise problem.NotSupported(msg)
 
@@ -1263,8 +1271,10 @@ class StorageHandle(object):
                     else:
                         signature = misc.get_fs_type(dev)
                         if signature and \
-                           not PR.check(PR.EXISTING_FILESYSTEM,
+                           PR.check(PR.EXISTING_FILESYSTEM,
                                         [signature, dev]):
+                            misc.wipefs(dev, signature)
+                        elif signature:
                             args.device.remove(dev)
                             continue
 
@@ -1295,7 +1305,7 @@ class StorageHandle(object):
                     PR.info("Unable to remove '{0}'".format(pool['pool_name']))
                     ret = False
             if removed == 0:
-                PR.error("Nothing was removed!")
+                PR.error("Nothing was removed")
             return ret
         if len(args.items) == 0:
             err = "too few arguments"
@@ -1854,7 +1864,7 @@ def main(args=None):
     storage.set_globals(options)
 
     # Register clean-up function on exit
-    sys.exitfunc = misc.do_cleanup
+    atexit.register(misc.do_cleanup)
 
     if args.dry_run:
         return 0
