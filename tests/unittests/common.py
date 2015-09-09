@@ -133,6 +133,20 @@ class MockSystemDataSource(unittest.TestCase):
                 else:
                     self._cmdEq(expected)
 
+    def _checkCmdIgnoreOrder(self, command, expect_fixed, expect_loose, index=-1):
+        if command:
+            self.run_data = []
+            main.main(command)
+
+        data_split = self.run_data[index].split(" ")
+        fixed_split = expect_fixed.split(" ")
+        loose_split = expect_loose.split(" ")
+
+        self.assertEqual(data_split[:len(fixed_split)], fixed_split)
+        if sys.version < '3':
+            self.assertItemsEqual(data_split[len(fixed_split):], loose_split)
+        else:
+            self.assertCountEqual(data_split[len(fixed_split):], loose_split)
 
     def mock_run(self, cmd, *args, **kwargs):
         self.run_data.append(" ".join(cmd))
